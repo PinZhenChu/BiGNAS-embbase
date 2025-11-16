@@ -402,12 +402,16 @@ class HardUserInjector:
         promote_edges = torch.tensor(promote_edges, dtype=torch.long).t()
 
         # 若 add_promote_ratio < 1.0，則隨機只保留一定比例的 Hard Users 來加邊
-        if add_promote_ratio < 1.0:
-            # 要保留的數量，大於等於 1
-            k = max(1, int(promote_edges.size(1) * add_promote_ratio))
-            # 隨機抽樣保留 k 個 column
+        # 若 add_promote_ratio == 0 → 不加邊
+        if add_promote_ratio == 0:
+            promote_edges = torch.empty((2, 0), dtype=torch.long)
+        
+        elif add_promote_ratio < 1.0:
+            k = int(promote_edges.size(1) * add_promote_ratio)
+            k = max(1, k)  # 只有 add_promote_ratio > 0 時才會保底 1
             idx = torch.randperm(promote_edges.size(1))[:k]
             promote_edges = promote_edges[:, idx]
+
 
         logging.info(f"[HardUser] 加 promoted item 的邊數：{promote_edges.size(1)}")
         print("\n[HardUser] === 加邊（promote cold item） ===")
